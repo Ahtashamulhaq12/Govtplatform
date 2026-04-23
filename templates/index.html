@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative overflow-hidden bg-white dark:bg-darkBg">
+    <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary/20 blur-3xl mix-blend-multiply dark:mix-blend-overlay"></div>
+    <div class="absolute top-32 -left-32 w-96 h-96 rounded-full bg-blue-500/20 blur-3xl mix-blend-multiply dark:mix-blend-overlay"></div>
+    
+    <div class="container mx-auto px-4 py-24 lg:py-32 relative z-10">
+        <div class="text-center max-w-3xl mx-auto">
+            <span class="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-6 border border-primary/20 shadow-sm align-middle">
+                <i class="fa-solid fa-bolt mr-1"></i> The Future of Digital Democracy
+            </span>
+            <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8">
+                Your Voice. <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Our Future.</span>
+            </h1>
+            <p class="text-lg lg:text-xl text-gray-600 dark:text-gray-300 mb-10">
+                Engage in mock elections, voice your opinions on trending polls, and review provincial development through our secure, modern civic platform.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="{{ url_for('elections.index') }}" class="bg-primary hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-primary/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-vote-yea"></i> Cast Your Vote
+                </a>
+                <a href="{{ url_for('polls.index') }}" class="bg-gray-100 dark:bg-darkCard hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-900 dark:text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all transform hover:scale-105 border dark:border-gray-700 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> View Polls
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mx-auto px-4 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Feature 1 -->
+        <div class="bg-white dark:bg-darkCard p-8 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-primary/50 transition-colors group cursor-pointer">
+            <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-person-booth"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3 dark:text-white">Mock Elections</h3>
+            <p class="text-gray-500 dark:text-gray-400">Participate in live, secure voting simulations with real-time results.</p>
+        </div>
+        <!-- Feature 2 -->
+        <div class="bg-white dark:bg-darkCard p-8 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-primary/50 transition-colors group cursor-pointer">
+            <div class="w-14 h-14 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-poll"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3 dark:text-white">Public Polling</h3>
+            <p class="text-gray-500 dark:text-gray-400">Share your opinion on critical national issues and see what others think.</p>
+        </div>
+        <!-- Feature 3 -->
+        <div class="bg-white dark:bg-darkCard p-8 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-primary/50 transition-colors group cursor-pointer">
+            <div class="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-comments"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3 dark:text-white">Community Chat</h3>
+            <p class="text-gray-500 dark:text-gray-400">Engage in real-time discussions, share images and voice notes.</p>
+        </div>
+        <!-- Feature 4 -->
+        <div class="bg-white dark:bg-darkCard p-8 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-primary/50 transition-colors group cursor-pointer">
+            <div class="w-14 h-14 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-map-location-dot"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3 dark:text-white">Provincial Reviews</h3>
+            <p class="text-gray-500 dark:text-gray-400">Submit and view governance reviews across all provinces with AI sentiment analysis.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

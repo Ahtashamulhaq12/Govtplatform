@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 h-[calc(100vh-100px)]">
+    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-xl border dark:border-gray-800 flex flex-col h-full max-w-5xl mx-auto overflow-hidden">
+        
+        <!-- Chat Header -->
+        <div class="p-4 border-b dark:border-gray-800 bg-gray-50 dark:bg-darkBg flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold dark:text-white">Community Chat</h2>
+                    <p class="text-xs text-green-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Live</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100 dark:bg-[#0b1121]">
+            {% for msg in messages %}
+                <div class="flex {% if msg.is_me %}justify-end{% endif %}">
+                    <div class="max-w-[75%] rounded-2xl p-3 {% if msg.is_me %}bg-primary text-white rounded-br-none{% else %}bg-white dark:bg-darkCard text-gray-900 dark:text-gray-100 rounded-bl-none shadow-sm{% endif %}">
+                        {% if not msg.is_me %}
+                            <p class="text-xs font-bold text-primary mb-1">{{ msg.username }}</p>
+                        {% endif %}
+                        
+                        {% if msg.type == 'text' %}
+                            <p>{{ msg.content }}</p>
+                        {% elif msg.type == 'image' %}
+                            <img src="{{ msg.content }}" class="rounded-lg max-w-full h-auto mt-2" alt="Uploaded Image">
+                        {% elif msg.type == 'audio' %}
+                            <audio controls class="mt-2 outline-none h-10 w-full max-w-[200px]">
+                                <source src="{{ msg.content }}" type="audio/webm">
+                                Your browser does not support audio.
+                            </audio>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-4 bg-white dark:bg-darkCard border-t dark:border-gray-800">
+            <form id="chat-form" class="flex items-center gap-2">
+                
+                <!-- File Upload -->
+                <label class="cursor-pointer text-gray-500 hover:text-primary transition-colors p-2">
+                    <i class="fa-solid fa-paperclip text-xl"></i>
+                    <input type="file" id="file-input" accept="image/*" class="hidden">
+                </label>
+
+                <!-- Record Audio -->
+                <button type="button" id="record-btn" class="text-gray-500 hover:text-red-500 transition-colors p-2">
+                    <i class="fa-solid fa-microphone text-xl" id="mic-icon"></i>
+                </button>
+
+                <input type="text" id="message-input" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-darkBg border-none rounded-full dark:text-white focus:ring-2 focus:ring-primary" placeholder="Type a message...">
+                
+                <button type="submit" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-lg shadow-primary/30">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const fileInput = document.getElementById('file-input');
+    const recordBtn = document.getElementById('record-btn');
+    const micIcon = document.getElementById('mic-icon');
+    
+    // Auto scroll
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    scrollToBottom();
+
+    socket.on('new_message', function(data) {
+        const isMe = data.username === '{{ current_user.username }}';
+        
+        let contentHtml = '';
+        if(data.type === 'text') {
+            contentHtml = `<p>${data.content}</p>`;
+        } else if(data.type === 'image') {
+            contentHtml = `<img src="${data.content}" class="rounded-lg max-w-full h-auto mt-2">`;
+        } else if(data.type === 'audio') {
+            contentHtml = `<audio controls class="mt-2 outline-none h-10 w-full max-w-[200px]"><source src="${data.content}" type="audio/webm"></audio>`;
+        }
+
+        let msgHtml = `
+            <div class="flex ${isMe ? 'justify-end' : ''} mb-4">
+                <div class="max-w-[75%] rounded-2xl p-3 ${isMe ? 'bg-primary text-white rounded-br-none' : 'bg-white dark:bg-darkCard text-gray-900 dark:text-gray-100 rounded-bl-none shadow-sm'}">
+                    ${!isMe ? `<p class="text-xs font-bold text-primary mb-1">${data.username}</p>` : ''}
+                    ${contentHtml}
+                </div>
+            </div>
+        `;
+        
+        chatMessages.insertAdjacentHTML('beforeend', msgHtml);
+        scrollToBottom();
+    });
+
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = messageInput.value.trim();
+        if(text) {
+            socket.emit('send_message', { content: text });
+            messageInput.value = '';
+        }
+    });
+
+    // Handle File Upload
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        
+        try {
+            await fetch("{{ url_for('chat.upload_file') }}", {
+                method: 'POST',
+                body: formData
+            });
+            fileInput.value = ''; // Reset
+        } catch (err) {
+            console.error('Upload failed', err);
+        }
+    });
+
+    // Handle Audio Recording
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    recordBtn.addEventListener('click', async () => {
+        if(!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                isRecording = true;
+                micIcon.classList.remove('text-gray-500', 'fa-microphone');
+                micIcon.classList.add('text-red-500', 'fa-circle-stop', 'animate-pulse');
+                
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = [];
+                    
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, 'voicenote.webm');
+                    formData.append('type', 'audio');
+                    
+                    try {
+                        await fetch("{{ url_for('chat.upload_file') }}", {
+                            method: 'POST',
+                            body: formData
+                        });
+                    } catch (err) {
+                        console.error('Audio upload failed', err);
+                    }
+                });
+                
+            } catch (err) {
+                alert('Microphone access denied or error occurred.');
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            micIcon.classList.remove('text-red-500', 'fa-circle-stop', 'animate-pulse');
+            micIcon.classList.add('text-gray-500', 'fa-microphone');
+        }
+    });
+</script>
+{% endblock %}

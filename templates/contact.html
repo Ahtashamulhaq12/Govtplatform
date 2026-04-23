@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-2xl mx-auto bg-white dark:bg-darkCard p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800">
+        <h2 class="text-3xl font-bold dark:text-white mb-6 text-center">Contact Us</h2>
+        <p class="text-center text-gray-600 dark:text-gray-300 mb-8">Have questions, feedback, or need support regarding the platform? Write to us.</p>
+        
+        <form action="#" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+                <input type="text" class="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-darkBg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Your Name">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                <input type="email" class="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-darkBg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="your@email.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
+                <textarea rows="4" class="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-darkBg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="How can we help?"></textarea>
+            </div>
+            
+            <button type="button" onclick="alert('Message sent successfully! (Mock)')" class="w-full bg-primary hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-primary/30 transition-all">
+                Send Message
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

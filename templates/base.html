@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gov & Democracy Platform</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
+
+    <style>
+        /* Smooth transitions */
+        body { transition: background-color 0.3s, color 0.3s; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .dark .glass { background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-darkBg dark:text-gray-100 min-h-screen flex flex-col font-sans">
+    
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 glass w-full py-4 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="{{ url_for('main.index') }}" class="text-2xl font-bold flex items-center gap-2 text-primary">
+                <i class="fa-solid fa-landmark text-primary"></i>
+                <span>GovPlatform</span>
+            </a>
+            
+            <div class="hidden md:flex space-x-6 items-center font-medium">
+                <a href="{{ url_for('main.index') }}" class="hover:text-primary transition-colors">Home</a>
+                <a href="{{ url_for('elections.index') }}" class="hover:text-primary transition-colors">Elections</a>
+                <a href="{{ url_for('polls.index') }}" class="hover:text-primary transition-colors">Polls</a>
+                <div class="relative group">
+                    <button class="hover:text-primary transition-colors flex items-center gap-1">Reviews <i class="fa-solid fa-caret-down text-sm"></i></button>
+                    <div class="absolute hidden group-hover:block top-full left-0 mt-2 w-48 bg-white dark:bg-darkCard rounded-lg shadow-xl py-2 z-50 transition-all opacity-0 group-hover:opacity-100">
+                        <a href="{{ url_for('reviews.index', review_type='provincial') }}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">Provincial Reviews</a>
+                        <a href="{{ url_for('reviews.index', review_type='public') }}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">Public Reviews</a>
+                    </div>
+                </div>
+                <a href="{{ url_for('chat.index') }}" class="hover:text-primary transition-colors">Community</a>
+                <a href="{{ url_for('main.leaderboard') }}" class="hover:text-primary transition-colors"><i class="fa-solid fa-trophy text-yellow-500"></i> Leaderboard</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Theme toggle -->
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                
+                {% if current_user.is_authenticated %}
+                    <div class="relative group">
+                        <button class="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full font-bold">
+                            <i class="fa-solid fa-user-circle"></i> {{ current_user.username }}
+                        </button>
+                        <div class="absolute hidden group-hover:block top-full right-0 mt-2 w-40 bg-white dark:bg-darkCard rounded-lg shadow-xl py-2 z-50">
+                            <div class="px-4 py-2 text-sm text-gray-500 border-b dark:border-gray-700">Points: {{ current_user.points }}</div>
+                            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors font-medium">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="bg-primary text-white px-4 py-2 rounded-lg font-medium shadow-lg shadow-primary/30 hover:bg-emerald-600 transition-colors">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flashed Messages -->
+    <div class="container mx-auto px-4 mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 text-sm rounded-lg {% if category == 'success' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400{% elif category == 'danger' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400{% else %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard border-t dark:border-gray-800 mt-20 pt-10 pb-6">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-2xl font-bold text-primary mb-2"><i class="fa-solid fa-landmark"></i> GovPlatform</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">Empowering citizens through transparent and digital democracy.</p>
+            <div class="text-sm text-gray-400">
+                &copy; 2026 Government & Democracy Project. All rights reserved.<br>
+                <span class="text-primary font-medium mt-2 block">Developed by Ahtasham Khan</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const htmlElement = document.documentElement;
+        
+        // Initial load
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.add('dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            htmlElement.classList.remove('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

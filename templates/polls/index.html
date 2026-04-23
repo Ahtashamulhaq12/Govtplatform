@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-4xl">
+    <div class="mb-10 text-center">
+        <span class="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-semibold text-sm mb-4">
+            <i class="fa-solid fa-bolt mr-1"></i> Trending Topics
+        </span>
+        <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">Public Opinion Polls</h1>
+        <p class="text-gray-600 dark:text-gray-300">Share your thoughts on the most pressing issues in our country today.</p>
+    </div>
+
+    <div class="space-y-8">
+        {% for poll in polls %}
+            <div class="bg-white dark:bg-darkCard rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ poll.question }}</h3>
+                
+                {% set total_votes = poll.options | map(attribute='votes') | sum %}
+                
+                <div class="space-y-4">
+                    {% for option in poll.options %}
+                        {% set percent = (option.votes / total_votes * 100)|round(1) if total_votes > 0 else 0 %}
+                        
+                        <div class="relative group">
+                            <!-- Progress Bar Background (only visible clearly if voted) -->
+                            {% if poll.id in voted_polls %}
+                            <div class="absolute inset-0 bg-primary/10 dark:bg-primary/20 rounded-xl overflow-hidden pointer-events-none">
+                                <div class="h-full bg-primary/20 dark:bg-primary/40 transition-all duration-1000" style="width: {{ percent }}%"></div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="relative z-10 flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl {% if not poll.id in voted_polls %}hover:border-primary transition-colors cursor-pointer bg-gray-50 dark:bg-darkBg{% endif %}">
+                                <form method="POST" action="{{ url_for('polls.vote', option_id=option.id) }}" class="w-full flex items-center justify-between">
+                                    <span class="font-medium dark:text-gray-200">{{ option.text }}</span>
+                                    
+                                    {% if poll.id in voted_polls %}
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm text-gray-500">{{ option.votes }} votes</span>
+                                            <span class="font-bold text-primary">{{ percent }}%</span>
+                                        </div>
+                                    {% else %}
+                                        <button type="submit" class="opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium">Vote</button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 text-sm text-gray-400 flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> {{ total_votes }} total votes
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center p-12 bg-white dark:bg-darkCard rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                <i class="fa-solid fa-clipboard-list text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-xl font-bold dark:text-white">No active polls</h3>
+                <p class="text-gray-500 mt-2">Check back later for new public opinion polls.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

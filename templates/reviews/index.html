@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-5xl">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white capitalize">
+                {{ review_type }} Reviews
+            </h1>
+            <p class="text-gray-600 dark:text-gray-300 mt-2">
+                {% if review_type == 'provincial' %}
+                    Submit reports and evaluate localized development initiatives.
+                {% else %}
+                    Public feedback on national policies and platform functionality.
+                {% endif %}
+            </p>
+        </div>
+        
+        {% if review_type == 'provincial' %}
+        <div class="bg-white dark:bg-darkCard p-2 rounded-lg border dark:border-gray-800 shadow-sm flex items-center">
+            <span class="text-sm font-bold text-gray-500 mr-3 ml-2">Filter:</span>
+            <div class="flex gap-1 overflow-x-auto">
+                <a href="{{ url_for('reviews.index', review_type='provincial') }}" class="px-3 py-1 rounded-md text-sm {% if not current_province %}bg-primary text-white{% else %}text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800{% endif %} whitespace-nowrap">All</a>
+                {% for prov in provinces %}
+                    <a href="{{ url_for('reviews.index', review_type='provincial', province=prov) }}" class="px-3 py-1 rounded-md text-sm {% if current_province == prov %}bg-primary text-white{% else %}text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800{% endif %} whitespace-nowrap">{{ prov }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Submit Form -->
+        <div class="lg:col-span-1">
+            <div class="bg-white dark:bg-darkCard rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
+                <h3 class="font-bold text-xl mb-4 dark:text-white"><i class="fa-solid fa-pen-nib text-primary"></i> Write a Review</h3>
+                
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('reviews.submit') }}">
+                    <input type="hidden" name="type" value="{{ review_type }}">
+                    
+                    {% if review_type == 'provincial' %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Province</label>
+                        <select name="province" required class="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-darkBg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                            <option value="">Select Province...</option>
+                            {% for prov in provinces %}
+                            <option value="{{ prov }}" {% if current_province == prov %}selected{% endif %}>{{ prov }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rating (1-10)</label>
+                        <input type="number" name="rating" min="1" max="10" required class="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-darkBg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Your Feedback</label>
+                        <textarea name="text" rows="4" required class="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-darkBg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Detail your experience..."></textarea>
+                        <p class="text-xs text-gray-400 mt-2"><i class="fa-solid fa-robot"></i> AI Sentiment Analysis will evaluate your text.</p>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-primary hover:bg-emerald-600 text-white font-bold py-2 rounded-lg transition-colors">Publish Review</button>
+                </form>
+                {% else %}
+                <div class="text-center p-6 bg-gray-50 dark:bg-darkBg rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                    <p class="text-gray-500 mb-4">You need an account to write reviews.</p>
+                    <a href="{{ url_for('auth.login') }}" class="mt-2 inline-block bg-primary text-white px-6 py-2 rounded font-medium">Login</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Reviews List -->
+        <div class="lg:col-span-2 space-y-6">
+            {% for review in reviews %}
+            <div class="bg-white dark:bg-darkCard rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-user-circle text-4xl text-gray-300 dark:text-gray-600"></i>
+                        <div>
+                            <div class="font-bold dark:text-white flex items-center gap-2">
+                                {{ review.author.username }}
+                                {% if review.author.role == 'admin' %}
+                                    <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Official</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-gray-500">{{ review.created_at.strftime('%B %d, %Y') }}
+                                {% if review.province %} &bull; <span class="font-semibold text-primary">{{ review.province }}</span> {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating Badge -->
+                    <div class="flex flex-col items-end">
+                        <div class="text-lg font-bold flex items-center gap-1 dark:text-white">
+                            <i class="fa-solid fa-star text-yellow-500 text-sm"></i> {{ review.rating }}/10
+                        </div>
+                        
+                        <!-- AI Sentiment -->
+                        {% set sentiment = review.sentiment_score %}
+                        {% if sentiment > 0.3 %}
+                            <span class="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 rounded-full flex items-center gap-1 mt-1" title="Score: {{sentiment|round(2)}}">
+                                <i class="fa-solid fa-face-smile"></i> Positive
+                            </span>
+                        {% elif sentiment < -0.3 %}
+                            <span class="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 rounded-full flex items-center gap-1 mt-1" title="Score: {{sentiment|round(2)}}">
+                                <i class="fa-solid fa-face-angry"></i> Negative
+                            </span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 px-2 rounded-full flex items-center gap-1 mt-1" title="Score: {{sentiment|round(2)}}">
+                                <i class="fa-solid fa-face-meh"></i> Neutral
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p class="text-gray-700 dark:text-gray-300">{{ review.text }}</p>
+            </div>
+            {% else %}
+            <div class="text-center p-12 bg-white dark:bg-darkCard rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                <i class="fa-solid fa-folder-open text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-xl font-bold dark:text-white">No reviews found.</h3>
+                <p class="text-gray-500 mt-2">Be the first to share your thoughts.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

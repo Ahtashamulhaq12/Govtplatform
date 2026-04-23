@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="mb-10 text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">National Mock Elections</h1>
+        <p class="text-gray-600 dark:text-gray-300">Exercise your democratic right. Cast your vote securely and see live results.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <!-- Candidates List -->
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-users text-primary"></i> Candidates
+            </h2>
+            
+            {% if has_voted %}
+                <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
+                    <p class="text-blue-700 dark:text-blue-400 font-medium"><i class="fa-solid fa-check-circle mr-2"></i> You have already cast your vote in this election.</p>
+                </div>
+            {% endif %}
+
+            {% for candidate in candidates %}
+                <div class="bg-white dark:bg-darkCard rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between transition-transform hover:scale-105">
+                    <div>
+                        <h3 class="text-xl font-bold dark:text-white">{{ candidate.name }}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ candidate.party }}</p>
+                        <span class="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-800 text-xs rounded text-gray-600 dark:text-gray-300">Run for: {{ candidate.position }}</span>
+                    </div>
+                    
+                    {% if not has_voted %}
+                        <form method="POST" action="{{ url_for('elections.vote', candidate_id=candidate.id) }}">
+                            <button type="submit" class="bg-primary hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-full shadow transition-colors">
+                                Vote
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="text-2xl font-bold text-gray-400">
+                            {{ candidate.votes }} <span class="text-sm font-normal">votes</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Live Results Chart -->
+        <div>
+            <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2 mb-6">
+                <i class="fa-solid fa-chart-bar text-primary"></i> Live Results
+            </h2>
+            <div class="bg-white dark:bg-darkCard rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 h-[400px]">
+                <canvas id="resultsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const response = await fetch("{{ url_for('elections.api_results') }}");
+            const data = await response.json();
+            
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            
+            // Generate vibrant colors for each candidate
+            const bgColors = data.labels.map((_, i) => `hsla(${i * 60 + 150}, 70%, 50%, 0.7)`);
+            const borderColors = data.labels.map((_, i) => `hsl(${i * 60 + 150}, 70%, 50%)`);
+
+            // Check theme for text color
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#f3f4f6' : '#1f2937';
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Total Votes',
+                        data: data.votes,
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, color: textColor }
+                        },
+                        x: {
+                            ticks: { color: textColor }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Failed to load chart data", error);
+        }
+    });
+</script>
+{% endblock %}

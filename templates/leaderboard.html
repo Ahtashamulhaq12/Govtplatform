@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-4xl">
+    <div class="mb-10 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 text-yellow-500 text-3xl mb-4">
+            <i class="fa-solid fa-trophy"></i>
+        </div>
+        <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">Civic Leaderboard</h1>
+        <p class="text-gray-600 dark:text-gray-300">Top citizens actively shaping the future of our democracy.</p>
+    </div>
+
+    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-[#1a2333] border-b border-gray-200 dark:border-gray-700">
+                    <th class="py-4 px-6 font-bold text-gray-600 dark:text-gray-300">Rank</th>
+                    <th class="py-4 px-6 font-bold text-gray-600 dark:text-gray-300">Citizen</th>
+                    <th class="py-4 px-6 font-bold text-gray-600 dark:text-gray-300 text-right">Activity Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr class="border-b border-gray-100 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <td class="py-4 px-6">
+                            {% if loop.index == 1 %}
+                                <span class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold">1</span>
+                            {% elif loop.index == 2 %}
+                                <span class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold">2</span>
+                            {% elif loop.index == 3 %}
+                                <span class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">3</span>
+                            {% else %}
+                                <span class="font-bold text-gray-400 ml-3">{{ loop.index }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 font-medium dark:text-gray-200 flex items-center gap-3">
+                            <i class="fa-solid fa-user-circle text-2xl text-gray-400"></i>
+                            {{ user.username }}
+                            {% if user.role == 'admin' %}
+                                <span class="text-xs bg-red-100 text-red-600 px-2 rounded-full">Official</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right font-bold text-primary">{{ user.points }} pt</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
